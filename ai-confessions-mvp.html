@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AI Confessions Booth — نسخة أولية</title>
+  <style>
+    :root{
+      --bg:#0f1014;--card:#171922;--txt:#f2f2f2;--muted:#a9abb3;
+      --line:#2a2d39;--ok:#7be495;--acc:#6bb8ff;--warn:#ffb86b;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;background:radial-gradient(70% 50% at 50% 0%, #222 0%, var(--bg) 55%, #0b0c10 100%);
+         color:var(--txt);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial}
+    .wrap{max-width:920px;margin:20px auto;padding:0 14px}
+    header{padding:20px 0 8px;text-align:center}
+    header h1{margin:0 0 8px;font-size:38px}
+    header p{margin:0;color:var(--muted)}
+    .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;margin-top:14px;
+          box-shadow:0 12px 28px rgba(0,0,0,.35)}
+    label{display:block;margin-bottom:6px;color:#d7d9e0}
+    textarea{width:100%;min-height:120px;background:#121420;color:var(--txt);border:1px solid #2b2e3a;
+             border-radius:12px;padding:12px;resize:vertical;line-height:1.6;outline:none}
+    textarea:focus{border-color:#3a3f4f}
+    .row{display:flex;gap:10px;flex-wrap:wrap;margin:10px 0 6px}
+    select,button{border:none;border-radius:12px;padding:12px 14px;font-weight:600}
+    select{background:#141724;color:#e6e8ee;border:1px solid #2e3140}
+    button{cursor:pointer;background:linear-gradient(90deg,var(--ok),var(--acc));color:#0b0c10;
+           transition:transform .06s ease,opacity .2s}
+    button:hover{transform:translateY(-1px)}
+    button:disabled{opacity:.6;cursor:not-allowed}
+    .note{color:var(--muted);font-size:13px;margin-top:6px}
+    .msg{min-height:18px;font-size:14px;margin-top:6px}
+    .msg.ok{color:#7be495}.msg.err{color:#ff8c8c}
+    h2{margin:18px 0 10px}
+    ul.list{list-style:none;margin:0;padding:0;display:grid;gap:12px}
+    .item{background:#111420;border:1px solid var(--line);border-radius:14px;padding:12px 14px}
+    .meta{display:flex;gap:8px;align-items:center;color:var(--muted);font-size:12px}
+    .badge{font-size:11px;padding:2px 8px;border-radius:999px;border:1px solid #3a3d4a}
+    .r{color:#ff8c8c}.s{color:#9de7c4}
+    .content{white-space:pre-wrap;line-height:1.7;margin:8px 0 10px}
+    .reply{background:#0f1220;border:1px dashed #30354a;border-radius:10px;padding:10px;color:#dfe3ee;font-size:14px}
+    .foot{color:#8b8f9b;text-align:center;margin:18px 0}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <h1>اعترف…</h1>
+      <p>اكتب سرك، واختر المزاج: جلد ساخر أو مواساة ذكية. كل شيء محليًا على جهازك.</p>
+    </header>
+
+    <main class="card">
+      <form id="f">
+        <label for="c">اعترافك</label>
+        <textarea id="c" placeholder="اكتب هنا… لا بيانات شخصية، لا جرائم."></textarea>
+        <div class="row">
+          <select id="m">
+            <option value="roast">أبغى جلد ساخر</option>
+            <option value="soothe">أبغى مواساة ذكية</option>
+          </select>
+          <button id="btn" type="submit">اعترف الآن</button>
+        </div>
+        <div id="msg" class="msg"></div>
+        <p class="note">ملاحظة: يتم حفظ الاعترافات محليًا عبر المتصفح (localStorage) فقط.</p>
+      </form>
+    </main>
+
+    <section>
+      <h2>أحدث الاعترافات</h2>
+      <ul id="list" class="list"></ul>
+    </section>
+
+    <footer class="foot">© AI Confessions Booth — نسخة تجريبية محلية.</footer>
+  </div>
+
+  <script>
+    const storeKey = "confessions_v1";
+    const f = document.getElementById("f");
+    const c = document.getElementById("c");
+    const m = document.getElementById("m");
+    const btn = document.getElementById("btn");
+    const msg = document.getElementById("msg");
+    const list = document.getElementById("list");
+
+    function loadAll(){
+      try{ return JSON.parse(localStorage.getItem(storeKey) || "[]"); }
+      catch{ return []; }
+    }
+    function saveAll(arr){
+      localStorage.setItem(storeKey, JSON.stringify(arr));
+    }
+    function esc(s){return s.replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));}
+
+    function aiLocalReply(text, mood){
+      const t = text.trim();
+      if(mood === "roast"){
+        return (t.length < 40)
+          ? "اعترافك قصير مثل بطارية جوالك الساعة 1%… زوده وضبط وضعك."
+          : "واضح عندك وعي، بس كثرة الجلد ما تصلح حياة. خطوة عملية خلال 24 ساعة تكفي.";
+      }else{
+        return (t.length > 120)
+          ? "عمقك واضح. خذي نفس… صحّحي تفصيلة صغيرة اليوم، وخلي الباقي يتراكم لصالحك."
+          : "كلنا نطيح ونقوم. أنتِ أكبر من هذه اللحظة. اليوم تعديل صغير وبكرا أوسع.";
+      }
+    }
+
+    function itemTemplate({content, mood, reply, createdAt}){
+      const d = new Date(createdAt);
+      const date = d.toLocaleString('ar');
+      const badge = mood === "roast" ? '<span class="badge r">جلد</span>' : '<span class="badge s">مواساة</span>';
+      return \`
+        <li class="item">
+          <div class="meta">\${badge}<span>\${date}</span></div>
+          <div class="content">\${esc(content)}</div>
+          <div class="reply">\${esc(reply)}</div>
+        </li>\`;
+    }
+
+    function render(){
+      const data = loadAll().sort((a,b)=> new Date(b.createdAt)-new Date(a.createdAt));
+      if(data.length === 0){
+        list.innerHTML = '<li class="item"><div class="content">لا يوجد اعترافات بعد. ابدأي أنتِ.</div></li>';
+      }else{
+        list.innerHTML = data.map(itemTemplate).join('');
+      }
+    }
+
+    f.addEventListener("submit", (e)=>{
+      e.preventDefault();
+      msg.className = "msg";
+      msg.textContent = "";
+      const text = c.value.trim();
+      const mood = m.value;
+      if(text.length < 10){
+        msg.textContent = "أكتبي اعترافاً أوضح. أقل شيء 10 أحرف.";
+        msg.classList.add("err");
+        return;
+      }
+      if(text.length > 1000){
+        msg.textContent = "طويل بزيادة. اكتبي ضمن 1000 حرف.";
+        msg.classList.add("err");
+        return;
+      }
+      btn.disabled = true; btn.textContent = "…جارٍ";
+      try{
+        const reply = aiLocalReply(text, mood);
+        const row = { content: text, mood, reply, createdAt: new Date().toISOString() };
+        const all = loadAll(); all.push(row); saveAll(all);
+        c.value = ""; m.value = "roast";
+        msg.textContent = "تم حفظ اعترافك محليًا مع الرد."; msg.classList.add("ok");
+        render();
+      }finally{
+        btn.disabled = false; btn.textContent = "اعترف الآن";
+      }
+    });
+
+    // أول تحميل
+    render();
+  </script>
+</body>
+</html>
