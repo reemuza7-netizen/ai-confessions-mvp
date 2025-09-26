@@ -3,33 +3,46 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>AI Confessions Booth — نسخة أولية</title>
+  <title>AI Confessions Booth | كشك الاعترافات</title>
+  <meta name="description" content="اكتب سرك، واختر المزاج: جلد ساخر أو مواساة ذكية. الحفظ محلياً على جهازك.">
+  <meta property="og:title" content="كشك الاعترافات">
+  <meta property="og:description" content="اكتب سرك… وخذ رد ساخر أو مواساة.">
+  <meta property="og:type" content="website">
+  <meta name="theme-color" content="#0f1014">
+  <link rel="icon" href='data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="14" fill="%23171a22"/><path d="M16 42c8-6 24-6 32 0" stroke="%23a5b4fc" stroke-width="4" fill="none" stroke-linecap="round"/><circle cx="24" cy="26" r="3" fill="%23fda4af"/><circle cx="40" cy="26" r="3" fill="%23fda4af"/></svg>'>
   <style>
     :root{
       --bg:#0f1014;--card:#171922;--txt:#f2f2f2;--muted:#a9abb3;
-      --line:#2a2d39;--ok:#7be495;--acc:#6bb8ff;--warn:#ffb86b;
+      --line:#2a2d39;--ok:#7be495;--acc:#6bb8ff;--warn:#ffb86b;--ink:#0b0c10;
     }
     *{box-sizing:border-box}
     body{margin:0;background:radial-gradient(70% 50% at 50% 0%, #222 0%, var(--bg) 55%, #0b0c10 100%);
-         color:var(--txt);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial}
-    .wrap{max-width:920px;margin:20px auto;padding:0 14px}
-    header{padding:20px 0 8px;text-align:center}
-    header h1{margin:0 0 8px;font-size:38px}
+         color:var(--txt);font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial}
+    .wrap{max-width:960px;margin:20px auto;padding:0 14px}
+    header{padding:22px 0 10px;text-align:center}
+    header h1{margin:0 0 6px;font-size:40px}
     header p{margin:0;color:var(--muted)}
+    .bar{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin:12px 0 8px}
+    .ghost{border:1px solid var(--line);background:transparent;color:#d6d7de;border-radius:12px;padding:10px 14px;cursor:pointer}
+    .ghost:hover{background:#1b1e29}
     .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;margin-top:14px;
           box-shadow:0 12px 28px rgba(0,0,0,.35)}
     label{display:block;margin-bottom:6px;color:#d7d9e0}
     textarea{width:100%;min-height:120px;background:#121420;color:var(--txt);border:1px solid #2b2e3a;
              border-radius:12px;padding:12px;resize:vertical;line-height:1.6;outline:none}
     textarea:focus{border-color:#3a3f4f}
-    .row{display:flex;gap:10px;flex-wrap:wrap;margin:10px 0 6px}
+    .meta-row{display:flex;gap:10px;align-items:center;justify-content:space-between;margin:8px 0}
+    .left{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
     select,button{border:none;border-radius:12px;padding:12px 14px;font-weight:600}
     select{background:#141724;color:#e6e8ee;border:1px solid #2e3140}
-    button{cursor:pointer;background:linear-gradient(90deg,var(--ok),var(--acc));color:#0b0c10;
-           transition:transform .06s ease,opacity .2s}
-    button:hover{transform:translateY(-1px)}
-    button:disabled{opacity:.6;cursor:not-allowed}
+    .primary{cursor:pointer;background:linear-gradient(90deg,var(--ok),var(--acc));color:var(--ink);
+             transition:transform .06s ease,opacity .2s}
+    .primary:hover{transform:translateY(-1px)}
+    .primary:disabled{opacity:.6;cursor:not-allowed}
     .note{color:var(--muted);font-size:13px;margin-top:6px}
+    .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+    .check{display:flex;gap:8px;align-items:center;color:#cbd0dc;font-size:14px}
+    .counter{font-size:12px;color:var(--muted)}
     .msg{min-height:18px;font-size:14px;margin-top:6px}
     .msg.ok{color:#7be495}.msg.err{color:#ff8c8c}
     h2{margin:18px 0 10px}
@@ -37,32 +50,52 @@
     .item{background:#111420;border:1px solid var(--line);border-radius:14px;padding:12px 14px}
     .meta{display:flex;gap:8px;align-items:center;color:var(--muted);font-size:12px}
     .badge{font-size:11px;padding:2px 8px;border-radius:999px;border:1px solid #3a3d4a}
-    .r{color:#ff8c8c}.s{color:#9de7c4}
+    .r{color:#ff8c8c}.s{color:#9de7c4}.p{color:#ffd7a0}
     .content{white-space:pre-wrap;line-height:1.7;margin:8px 0 10px}
     .reply{background:#0f1220;border:1px dashed #30354a;border-radius:10px;padding:10px;color:#dfe3ee;font-size:14px}
     .foot{color:#8b8f9b;text-align:center;margin:18px 0}
+    .toast{position:fixed;inset-inline:0;bottom:18px;display:flex;justify-content:center;pointer-events:none}
+    .toast > div{pointer-events:auto;background:#10131d;border:1px solid #2b3042;color:#e6e8ee;padding:10px 14px;border-radius:12px;box-shadow:0 12px 24px rgba(0,0,0,.35)}
+    .hidden{display:none}
   </style>
 </head>
 <body>
   <div class="wrap">
     <header>
-      <h1>اعترف…</h1>
-      <p>اكتب سرك، واختر المزاج: جلد ساخر أو مواساة ذكية. كل شيء محليًا على جهازك.</p>
+      <h1>كشك الاعترافات</h1>
+      <p>اكتب سرك… خذ جلد ساخر أو مواساة ذكية. الحفظ محلياً على جهازك فقط.</p>
     </header>
+
+    <div class="bar">
+      <button class="ghost" id="copy-link">نسخ رابط الموقع</button>
+      <button class="ghost" id="clear-all">مسح كل الاعترافات</button>
+    </div>
 
     <main class="card">
       <form id="f">
         <label for="c">اعترافك</label>
-        <textarea id="c" placeholder="اكتب هنا… لا بيانات شخصية، لا جرائم."></textarea>
-        <div class="row">
-          <select id="m">
-            <option value="roast">أبغى جلد ساخر</option>
-            <option value="soothe">أبغى مواساة ذكية</option>
-          </select>
-          <button id="btn" type="submit">اعترف الآن</button>
+        <textarea id="c" maxlength="1000" placeholder="اكتب هنا… لا أسماء ولا بيانات شخصية."></textarea>
+
+        <div class="meta-row">
+          <div class="left row">
+            <select id="m">
+              <option value="roast">أبغى جلد ساخر</option>
+              <option value="soothe">أبغى مواساة ذكية</option>
+            </select>
+            <label class="check">
+              <input type="checkbox" id="hide" />
+              لا تعرض اعترافي في القائمة
+            </label>
+          </div>
+          <div class="counter" id="counter">0 / 1000</div>
         </div>
+
+        <div class="row">
+          <button class="primary" id="btn" type="submit">اعترف الآن</button>
+        </div>
+
         <div id="msg" class="msg"></div>
-        <p class="note">ملاحظة: يتم حفظ الاعترافات محليًا عبر المتصفح (localStorage) فقط.</p>
+        <p class="note">تنبيه: لو فيه محتوى مؤذي لنفسك أو لغيرك، هذا المكان ليس للطوارئ.</p>
       </form>
     </main>
 
@@ -74,81 +107,94 @@
     <footer class="foot">© AI Confessions Booth — نسخة تجريبية محلية.</footer>
   </div>
 
+  <div class="toast hidden" id="toast"><div id="toast-text"></div></div>
+
   <script>
-    const storeKey = "confessions_v1";
+    // إعدادات
+    const storeKey = "confessions_v2"; // نسخة جديدة لتفادي تعارض النسخة القديمة
+    const banned = ["http://","https://","+966","رقم","جوال","هاتف","ايميل","email","@"]; // فلتر بسيط
+
+    // عناصر
     const f = document.getElementById("f");
     const c = document.getElementById("c");
     const m = document.getElementById("m");
+    const hide = document.getElementById("hide");
     const btn = document.getElementById("btn");
     const msg = document.getElementById("msg");
     const list = document.getElementById("list");
+    const counter = document.getElementById("counter");
+    const copyLinkBtn = document.getElementById("copy-link");
+    const clearAllBtn = document.getElementById("clear-all");
+    const toast = document.getElementById("toast");
+    const toastText = document.getElementById("toast-text");
 
-    function loadAll(){
-      try{ return JSON.parse(localStorage.getItem(storeKey) || "[]"); }
-      catch{ return []; }
-    }
-    function saveAll(arr){
-      localStorage.setItem(storeKey, JSON.stringify(arr));
-    }
-    function esc(s){return s.replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));}
-
+    // Helpers
+    function showToast(text){ toastText.textContent = text; toast.classList.remove("hidden"); setTimeout(()=>toast.classList.add("hidden"), 1800); }
+    function loadAll(){ try{ return JSON.parse(localStorage.getItem(storeKey) || "[]"); }catch{ return []; } }
+    function saveAll(arr){ localStorage.setItem(storeKey, JSON.stringify(arr)); }
+    function esc(s){ return s.replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch])); }
     function aiLocalReply(text, mood){
       const t = text.trim();
       if(mood === "roast"){
         return (t.length < 40)
-          ? "اعترافك قصير مثل بطارية جوالك الساعة 1%… زوده وضبط وضعك."
-          : "واضح عندك وعي، بس كثرة الجلد ما تصلح حياة. خطوة عملية خلال 24 ساعة تكفي.";
+          ? "اعترافك قصير مثل بطارية جوالك 1%… زوّده وخذ خطوة عملية خلال 24 ساعة."
+          : "وعي ممتاز، لكن الجلد ما يصلّح حياة. قرار صغير اليوم، وتسكير باب الدراما.";
       }else{
         return (t.length > 120)
-          ? "عمقك واضح. خذي نفس… صحّحي تفصيلة صغيرة اليوم، وخلي الباقي يتراكم لصالحك."
-          : "كلنا نطيح ونقوم. أنتِ أكبر من هذه اللحظة. اليوم تعديل صغير وبكرا أوسع.";
+          ? "عمقك واضح. خذي نفس… صحّحي تفصيلة واحدة اليوم، والباقي يتراكم لصالحك."
+          : "كلنا نطيح ونقوم. أنتِ أكبر من هذه اللحظة. تعديل صغير يكفي الآن.";
       }
     }
-
-    function itemTemplate({content, mood, reply, createdAt}){
-      const d = new Date(createdAt);
-      const date = d.toLocaleString('ar');
+    function itemTemplate({content, mood, reply, createdAt, hidden}){
+      if(hidden) return ""; // ما نعرضه
+      const d = new Date(createdAt).toLocaleString('ar');
       const badge = mood === "roast" ? '<span class="badge r">جلد</span>' : '<span class="badge s">مواساة</span>';
-      return \`
+      return `
         <li class="item">
-          <div class="meta">\${badge}<span>\${date}</span></div>
-          <div class="content">\${esc(content)}</div>
-          <div class="reply">\${esc(reply)}</div>
-        </li>\`;
+          <div class="meta">${badge}<span>${d}</span></div>
+          <div class="content">${esc(content)}</div>
+          <div class="reply">${esc(reply)}</div>
+        </li>`;
     }
-
     function render(){
       const data = loadAll().sort((a,b)=> new Date(b.createdAt)-new Date(a.createdAt));
-      if(data.length === 0){
-        list.innerHTML = '<li class="item"><div class="content">لا يوجد اعترافات بعد. ابدأي أنتِ.</div></li>';
-      }else{
-        list.innerHTML = data.map(itemTemplate).join('');
-      }
+      const html = data.map(itemTemplate).join("");
+      list.innerHTML = html || '<li class="item"><div class="content">لا يوجد اعترافات بعد. ابدئي أنتِ.</div></li>';
     }
 
+    // عداد
+    c.addEventListener("input", ()=> { counter.textContent = `${c.value.length} / 1000`; });
+
+    // نسخ الرابط
+    copyLinkBtn.addEventListener("click", async ()=>{
+      try{ await navigator.clipboard.writeText(window.location.href); showToast("تم نسخ الرابط."); }
+      catch{ showToast("انسخي الرابط من شريط العنوان."); }
+    });
+
+    // مسح كل الاعترافات
+    clearAllBtn.addEventListener("click", ()=>{
+      if(confirm("متأكدة من مسح جميع الاعترافات المحفوظة محليًا؟")){ localStorage.removeItem(storeKey); render(); showToast("تم المسح."); }
+    });
+
+    // إرسال
     f.addEventListener("submit", (e)=>{
       e.preventDefault();
-      msg.className = "msg";
-      msg.textContent = "";
+      msg.className = "msg"; msg.textContent = "";
       const text = c.value.trim();
       const mood = m.value;
-      if(text.length < 10){
-        msg.textContent = "أكتبي اعترافاً أوضح. أقل شيء 10 أحرف.";
-        msg.classList.add("err");
-        return;
-      }
-      if(text.length > 1000){
-        msg.textContent = "طويل بزيادة. اكتبي ضمن 1000 حرف.";
-        msg.classList.add("err");
-        return;
-      }
+      if(text.length < 10){ msg.textContent = "أكتبي اعترافًا أوضح. أقل شيء 10 أحرف."; msg.classList.add("err"); return; }
+      if(text.length > 1000){ msg.textContent = "طويل بزيادة. اكتبي ضمن 1000 حرف."; msg.classList.add("err"); return; }
+      // فلتر كلمات
+      const low = text.toLowerCase();
+      if(banned.some(w => low.includes(w))){ msg.textContent = "لا تضيفي أرقام/روابط/بيانات شخصية."; msg.classList.add("err"); return; }
+
       btn.disabled = true; btn.textContent = "…جارٍ";
       try{
         const reply = aiLocalReply(text, mood);
-        const row = { content: text, mood, reply, createdAt: new Date().toISOString() };
+        const row = { content: text, mood, reply, createdAt: new Date().toISOString(), hidden: !!hide.checked };
         const all = loadAll(); all.push(row); saveAll(all);
-        c.value = ""; m.value = "roast";
-        msg.textContent = "تم حفظ اعترافك محليًا مع الرد."; msg.classList.add("ok");
+        c.value = ""; hide.checked = false; m.value = "roast"; counter.textContent = "0 / 1000";
+        msg.textContent = "تم حفظ اعترافك محليًا."; msg.classList.add("ok");
         render();
       }finally{
         btn.disabled = false; btn.textContent = "اعترف الآن";
